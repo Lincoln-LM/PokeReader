@@ -11,6 +11,7 @@ pub struct Views {
     show_rng_view: bool,
     party_view: PartyView,
     wild_view: WildView,
+    show_daycare_view: bool,
 }
 
 impl Views {
@@ -50,8 +51,16 @@ pub fn run_gen7_views<GameReader: reader::Gen7Reader>(
         views.show_rng_view = !views.show_rng_view;
     }
 
+    if hid::Global::is_just_pressed(Button::Start | Button::Ddown) {
+        views.show_daycare_view = !views.show_daycare_view;
+    }
+
     if views.show_rng_view {
         super::rng7::run_view(game, screen)?;
+    }
+
+    if views.show_daycare_view {
+        super::daycare_view::run_daycare_view(game, screen)?;
     }
 
     if views.party_view.get_is_active() {
