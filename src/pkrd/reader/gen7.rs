@@ -16,7 +16,7 @@ pub trait Gen7Reader: Reader {
         self.default_read(Self::INITIAL_SEED_OFFSET)
     }
 
-    fn get_egg_seed(&self) -> u32 {
+    fn get_egg_seed(&self) -> [u32; 4] {
         self.default_read(Self::EGG_OFFSET)
     }
 
