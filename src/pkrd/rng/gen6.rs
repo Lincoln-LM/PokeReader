@@ -9,6 +9,7 @@ pub struct Gen6Rng {
     mt_advances: u32,
     tinymt_advances: u32,
     mt_state: u32,
+    target: u32,
 }
 
 impl Gen6Rng {
@@ -32,6 +33,10 @@ impl Gen6Rng {
         self.mt_state
     }
 
+    pub fn get_target(&self) -> u32 {
+        self.target
+    }
+
     pub fn update(&mut self, mt_state: u32, init_seed: u32, tinymt_state: [u32; 4]) {
         if self.init_seed != init_seed && init_seed != 0 {
             self.mt_rng = mt::MT::new(init_seed);
@@ -41,6 +46,11 @@ impl Gen6Rng {
             self.init_seed = init_seed;
             self.init_tinymt_state = tinymt_state;
             self.mt_state = init_seed;
+            let mut test_rng = tinymt::TinyMT::new(tinymt_state);
+            self.target = 0;
+            while test_rng.next() & 0xFFFF != 42069 {
+                self.target += 1;
+            }
         }
 
         // A boundary of 9999 makes sure we can't go in an infinite loop
