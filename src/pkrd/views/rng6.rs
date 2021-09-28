@@ -13,7 +13,7 @@ pub fn run_view(
         let black = display::Color::black();
         let white = display::Color::white();
 
-        screen.paint_square(&black, x, y, 200, 140)?;
+        screen.paint_square(&black, x, y, 200, 152)?;
 
         x += 10;
         y += 4;
@@ -38,6 +38,11 @@ pub fn run_view(
         let index = rng.get_tinymt_advances();
         let index_text = &alloc::format!("Index: {}", index);
         screen.draw_string(&white, index_text, x, y)?;
+
+        y += 12;
+        let tiny_mt_calibration = rng.get_tiny_mt_calibration();
+        let tiny_mt_calibration_text = &alloc::format!("Tiny Cali: {}", tiny_mt_calibration);
+        screen.draw_string(&white, tiny_mt_calibration_text, x, y)?;
 
         // should be moved to its own view?
         y += 12;

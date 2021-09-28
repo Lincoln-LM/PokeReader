@@ -9,6 +9,7 @@ pub struct Gen6Rng {
     mt_advances: u32,
     tinymt_advances: u32,
     mt_state: u32,
+    tinymt_calibration: u32,
 }
 
 impl Gen6Rng {
@@ -32,6 +33,10 @@ impl Gen6Rng {
         self.mt_state
     }
 
+    pub fn get_tiny_mt_calibration(&self) -> u32 {
+        self.tinymt_calibration
+    }
+
     pub fn update(&mut self, mt_state: u32, init_seed: u32, tinymt_state: [u32; 4]) {
         if self.init_seed != init_seed && init_seed != 0 {
             self.mt_rng = mt::MT::new(init_seed);
@@ -41,6 +46,7 @@ impl Gen6Rng {
             self.init_seed = init_seed;
             self.init_tinymt_state = tinymt_state;
             self.mt_state = init_seed;
+            self.tinymt_calibration = 0;
         }
 
         // A boundary of 9999 makes sure we can't go in an infinite loop
@@ -58,6 +64,9 @@ impl Gen6Rng {
         for tinymt_advances in 0..9999 {
             if tinymt_state == self.get_tinymt_state() || tinymt_state == [0, 0, 0, 0] {
                 self.tinymt_advances += tinymt_advances;
+                if tinymt_advances > 0 {
+                    self.tinymt_calibration = self.mt_advances;
+                }
                 break;
             }
             self.tinymt_rng.next_state();
