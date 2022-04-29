@@ -1,7 +1,6 @@
 #![no_std]
 #![allow(incomplete_features)]
 #![feature(alloc_error_handler)]
-#![feature(asm)]
 #![feature(start)]
 #![feature(if_let_guard)]
 #![allow(dead_code)]
@@ -20,8 +19,9 @@ use crate::pkrd::{
     request_handler::handle_pkrd_game_request,
 };
 use alloc::{boxed::Box, vec};
+use core::convert::TryFrom;
 #[cfg(not(test))]
-use core::panic::PanicInfo;
+use core::{arch::asm, panic::PanicInfo};
 use ctr::{
     fs, ptm, srv, svc,
     sysmodule::{
@@ -51,7 +51,7 @@ pub extern "C" fn initSystem() {
         match srv::init() {
             Ok(_) => break,
             Err(error_code) => {
-                if error_code != -0x277ff806 {
+                if error_code != 0xd88007fa {
                     panic!();
                 }
             }
@@ -134,10 +134,11 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
     let result = manager.run();
 
     match result {
-        Ok(result) => result as isize,
+        Ok(_) => 0,
         Err(result_code) => {
-            log::error(&alloc::format!("manager.run error {:x}", result_code));
-            result_code as isize
+            let raw_code = result_code.into_raw();
+            log::error(&alloc::format!("manager.run error {:x}", raw_code));
+            isize::try_from(raw_code).unwrap()
         }
     }
 }
