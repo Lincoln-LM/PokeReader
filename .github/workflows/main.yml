@@ -3,7 +3,7 @@ name: CICD
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [test]
 
 jobs:
   lint-build-deploy:
