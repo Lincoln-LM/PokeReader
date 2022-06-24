@@ -130,6 +130,13 @@ pub fn get_hooked_process(heap: &'static [u8]) -> Option<Box<dyn HookedProcess>>
     let running_app = SupportedTitle::from_running_app()?;
 
     let hookable_process: Box<dyn HookedProcess> = match running_app {
+        SupportedTitle::PokemonGold => game::PokemonGS::new_from_supported_title(running_app, heap),
+        SupportedTitle::PokemonSilver => {
+            game::PokemonGS::new_from_supported_title(running_app, heap)
+        }
+        SupportedTitle::PokemonCrystal => {
+            game::PokemonC::new_from_supported_title(running_app, heap)
+        }
         SupportedTitle::PokemonX => game::PokemonXY::new_from_supported_title(running_app, heap),
         SupportedTitle::PokemonY => game::PokemonXY::new_from_supported_title(running_app, heap),
         SupportedTitle::PokemonOR => game::PokemonORAS::new_from_supported_title(running_app, heap),
@@ -150,6 +157,9 @@ pub fn install_hook(title: SupportedTitle) -> CtrResult<()> {
     let handle_copy = process.copy_handle_to_process(&pkrd_session_handle)?;
 
     match title {
+        SupportedTitle::PokemonGold => game::PokemonGS::install_hook(&debug, handle_copy),
+        SupportedTitle::PokemonSilver => game::PokemonGS::install_hook(&debug, handle_copy),
+        SupportedTitle::PokemonCrystal => game::PokemonC::install_hook(&debug, handle_copy),
         SupportedTitle::PokemonX => game::PokemonXY::install_hook(&debug, handle_copy),
         SupportedTitle::PokemonY => game::PokemonXY::install_hook(&debug, handle_copy),
         SupportedTitle::PokemonOR => game::PokemonORAS::install_hook(&debug, handle_copy),
