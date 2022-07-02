@@ -23,7 +23,7 @@ use core::convert::TryFrom;
 #[cfg(not(test))]
 use core::{arch::asm, panic::PanicInfo};
 use ctr::{
-    fs, ptm, srv, svc,
+    fs, http, memory, ptm, srv, svc,
     sysmodule::{
         notification::NotificationManager,
         server::{Service, ServiceManager},
@@ -37,6 +37,17 @@ use ctr::{
 pub extern "C" fn __wrap_exit() {
     svc::exit_process();
 }
+
+#[repr(align(0x1000))]
+struct HttpBuffer([u8; 0x1000]);
+
+impl HttpBuffer {
+    fn as_mut_slice(&mut self) -> &mut [u8] {
+        &mut self.0
+    }
+}
+
+static mut HTTP_BUFFER: HttpBuffer = HttpBuffer([0; 0x1000]);
 
 /// Called before main to initialize the system.
 /// Used by 3ds toolchain.
@@ -61,6 +72,16 @@ pub extern "C" fn initSystem() {
     }
 
     fs::init().unwrap();
+
+    // This is safe as long as we're single threaded
+    let aligned_buffer = unsafe { HTTP_BUFFER.as_mut_slice() };
+    let memory_block = memory::MemoryBlock::new(
+        aligned_buffer,
+        memory::MemoryPermission::None,
+        memory::MemoryPermission::ReadWrite,
+    )
+    .expect("");
+    http::httpc_init(memory_block).expect("HTTPC did not init");
 }
 
 #[cfg(not(test))]
