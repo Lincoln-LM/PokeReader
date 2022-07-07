@@ -4,7 +4,7 @@ use super::context::PkrdServiceContext;
 use ctr::{hid, hid::InterfaceDevice, svc};
 
 pub fn handle_frame_pause(context: &mut PkrdServiceContext, is_top_screen: bool) {
-    if hid::Global::is_just_pressed(hid::Button::R) {
+    if hid::Global::is_just_pressed(hid::Button::R as u32) {
         context.is_paused = true;
     }
     if !context.is_connected
