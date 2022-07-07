@@ -56,7 +56,7 @@ pub trait Screen {
     }
 
     fn get_is_bottom_screen(&self) -> bool {
-        self.get_is_top_screen() == false
+        !self.get_is_top_screen()
     }
 
     /// # Safety

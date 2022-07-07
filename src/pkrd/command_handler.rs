@@ -8,7 +8,7 @@ use crate::SOCKET;
 use super::reader;
 
 #[repr(u32)]
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 pub enum Command {
     End = 0,
     Input = 1,
@@ -54,7 +54,7 @@ impl CommandHandler {
         let mut input_array = [0u8; 1024];
         if is_connected {
             let tcp_socket = SOCKET.lock();
-            if let Ok(_) = tcp_socket.recv(&mut input_array, 0) {
+            if tcp_socket.recv(&mut input_array, 0).is_ok() {
                 let mut command_length = 64;
                 for i in 0..64 {
                     let command = [

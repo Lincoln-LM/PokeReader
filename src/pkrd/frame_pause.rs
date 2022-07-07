@@ -9,7 +9,7 @@ pub fn handle_frame_pause(context: &mut PkrdServiceContext, is_top_screen: bool)
     }
     if !context.is_connected
         && hid::Global::is_just_pressed(
-            hid::Button::L | hid::Button::R | (hid::Button::Select | hid::Button::Select),
+            hid::Button::L | hid::Button::R | hid::Button::Select as u32,
         )
     {
         let connected_address = SOCKET.lock().accept().unwrap();
