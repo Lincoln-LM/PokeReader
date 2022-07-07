@@ -15,7 +15,11 @@ pub struct PokemonORAS {
 }
 
 impl HookedProcess for PokemonORAS {
-    fn run_hook(&mut self, screen: &mut display::DirectWriteScreen) -> CtrResult<()> {
+    fn run_hook(
+        &mut self,
+        screen: &mut display::DirectWriteScreen,
+        _is_connected: bool,
+    ) -> CtrResult<()> {
         self.views.run_views(screen, &self.reader, &mut self.rng)
     }
 

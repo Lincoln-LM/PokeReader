@@ -1,9 +1,12 @@
 use super::hook;
 use crate::log;
-use core::sync::atomic::{AtomicBool, Ordering};
+use core::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use ctr::{ptm, res::CtrResult, sysmodule::notification::NotificationHandlerResult};
 
 static IS_NEW_GAME_LAUNCH: AtomicBool = AtomicBool::new(false);
+// store this because VC has issues, implement AtomicU64?
+pub static GAME_TITLE_ID_HIGH: AtomicU32 = AtomicU32::new(0);
+pub static GAME_TITLE_ID_LOW: AtomicU32 = AtomicU32::new(0);
 
 /// Determines if a game was just launched.
 /// After this has been called once, it will always return `false` until a game is launched.
@@ -21,6 +24,9 @@ pub fn handle_launch_title_notification(_notification_id: u32) -> CtrResult<()> 
                 "Failed to hook title {:x}",
                 u64::from(title)
             ));
+        } else {
+            GAME_TITLE_ID_HIGH.store(((title as u64) >> 32u64) as u32, Ordering::Relaxed);
+            GAME_TITLE_ID_LOW.store(((title as u64) & 0xFFFFFFFFu64) as u32, Ordering::Relaxed);
         }
 
         return hook_result;

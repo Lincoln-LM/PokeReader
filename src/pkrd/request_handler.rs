@@ -111,7 +111,7 @@ pub fn handle_pkrd_game_request(
                 .ok_or_else::<ResultCode, fn() -> ResultCode>(|| {
                     GenericResultCode::InvalidValue.into()
                 })?
-                .run_hook(screen);
+                .run_hook(screen, context.is_connected);
 
             // The game ignores the result of this, and there's not much we can
             // do to handle the error aside from logging.

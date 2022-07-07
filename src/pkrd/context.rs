@@ -9,6 +9,7 @@ pub struct PkrdServiceContext {
     pub screen: DirectWriteScreen,
     pub game: Option<Box<dyn hook::HookedProcess>>,
     pub is_paused: bool,
+    pub is_connected: bool,
 }
 
 impl PkrdServiceContext {
@@ -17,6 +18,7 @@ impl PkrdServiceContext {
             screen: DirectWriteScreen::new(),
             game: None,
             is_paused: false,
+            is_connected: false,
         })
     }
 }

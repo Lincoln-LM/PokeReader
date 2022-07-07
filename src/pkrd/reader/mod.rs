@@ -1,3 +1,7 @@
+/// Tools to read Gen 2 specific values.
+mod gen2;
+pub use gen2::*;
+
 /// Tools to read Gen 6 specific values.
 mod gen6;
 pub use gen6::*;

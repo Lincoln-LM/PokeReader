@@ -23,12 +23,14 @@ use core::convert::TryFrom;
 #[cfg(not(test))]
 use core::{arch::asm, panic::PanicInfo};
 use ctr::{
-    fs, http, memory, ptm, srv, svc,
+    fs, memory, ptm, socket, srv, svc,
     sysmodule::{
         notification::NotificationManager,
         server::{Service, ServiceManager},
     },
 };
+use lazy_static::lazy_static;
+use spin::Mutex;
 
 /// Called after main exits to clean things up.
 /// Used by 3ds toolchain.
@@ -39,15 +41,22 @@ pub extern "C" fn __wrap_exit() {
 }
 
 #[repr(align(0x1000))]
-struct HttpBuffer([u8; 0x1000]);
+struct SocketBuffer([u8; 0x100000]);
 
-impl HttpBuffer {
+impl SocketBuffer {
     fn as_mut_slice(&mut self) -> &mut [u8] {
         &mut self.0
     }
 }
 
-static mut HTTP_BUFFER: HttpBuffer = HttpBuffer([0; 0x1000]);
+static mut SOCKET_BUFFER: SocketBuffer = SocketBuffer([0; 0x100000]);
+
+lazy_static! {
+    static ref SOCKET: Mutex<socket::SocketContext> =
+        Mutex::new(socket::SocketContext::new(socket::SocketType::Stream).unwrap());
+    static ref LOCAL_SOCKET: Mutex<[u8; 4]> = Mutex::new([0u8; 4]);
+    static ref CONNE_SOCKET: Mutex<[u16; 5]> = Mutex::new([0u16; 5]);
+}
 
 /// Called before main to initialize the system.
 /// Used by 3ds toolchain.
@@ -74,14 +83,14 @@ pub extern "C" fn initSystem() {
     fs::init().unwrap();
 
     // This is safe as long as we're single threaded
-    let aligned_buffer = unsafe { HTTP_BUFFER.as_mut_slice() };
+    let aligned_buffer = unsafe { SOCKET_BUFFER.as_mut_slice() };
     let memory_block = memory::MemoryBlock::new(
         aligned_buffer,
         memory::MemoryPermission::None,
         memory::MemoryPermission::ReadWrite,
     )
-    .expect("");
-    http::httpc_init(memory_block).expect("HTTPC did not init");
+    .unwrap();
+    socket::socu_init(memory_block).expect("soc:U did not init");
 }
 
 #[cfg(not(test))]
@@ -118,7 +127,23 @@ pub extern "C" fn abort() -> ! {
 #[start]
 fn main(_argc: isize, _argv: *const *const u8) -> isize {
     log::debug("\n\nStarted!");
-
+    // let mut tcp_socket = socket::SocketContext::new(socket::SocketType::Stream).unwrap();
+    {
+        let tcp_socket = SOCKET.lock();
+        tcp_socket
+            .bind(socket::SocketAddr::new(
+                tcp_socket.get_host_id().unwrap(),
+                7000,
+            ))
+            .expect("");
+        tcp_socket.listen(5).expect("");
+        LOCAL_SOCKET
+            .lock()
+            .clone_from_slice(&tcp_socket.get_host_id().unwrap());
+    };
+    // tcp_socket.bind(socket::SocketAddr::new(tcp_socket.get_host_id().unwrap(), 7000)).expect("");
+    // tcp_socket.listen(5).expect("");
+    // tcp_socket.accept().expect("");
     let global_context = Box::new(PkrdServiceContext::new().unwrap());
 
     let services = vec![Service::new("pkrd:game", 8, handle_pkrd_game_request).unwrap()];

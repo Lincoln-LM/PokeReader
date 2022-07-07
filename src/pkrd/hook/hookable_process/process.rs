@@ -1,7 +1,14 @@
+use core::{convert::TryInto, sync::atomic::Ordering};
+
 use super::config;
 use crate::{
     log,
-    pkrd::{display, game, hook::SupportedTitle, request_handler::get_pkrd_session_handle},
+    pkrd::{
+        display, game,
+        hook::SupportedTitle,
+        notification::{GAME_TITLE_ID_HIGH, GAME_TITLE_ID_LOW},
+        request_handler::get_pkrd_session_handle,
+    },
     utils,
 };
 use alloc::boxed::Box;
@@ -121,15 +128,29 @@ pub trait HookableProcess: HookedProcess {
 /// This is separate from HookableProcess so it can have a vtable
 /// and be used as `dyn HookedProcess`.
 pub trait HookedProcess {
-    fn run_hook(&mut self, screen: &mut display::DirectWriteScreen) -> CtrResult<()>;
+    fn run_hook(
+        &mut self,
+        screen: &mut display::DirectWriteScreen,
+        is_connected: bool,
+    ) -> CtrResult<()>;
 
     fn get_title(&self) -> SupportedTitle;
 }
 
 pub fn get_hooked_process(heap: &'static [u8]) -> Option<Box<dyn HookedProcess>> {
-    let running_app = SupportedTitle::from_running_app()?;
+    // VC has issues with getting title id here
+    let running_app: SupportedTitle = match SupportedTitle::from_running_app() {
+        Some(result) => result,
+        None => ((u64::from(GAME_TITLE_ID_HIGH.load(Ordering::Relaxed)) << 32)
+            | u64::from(GAME_TITLE_ID_LOW.load(Ordering::Relaxed)))
+        .try_into()
+        .unwrap(),
+    };
 
     let hookable_process: Box<dyn HookedProcess> = match running_app {
+        SupportedTitle::PokemonCrystal => {
+            game::PokemonC::new_from_supported_title(running_app, heap)
+        }
         SupportedTitle::PokemonX => game::PokemonXY::new_from_supported_title(running_app, heap),
         SupportedTitle::PokemonY => game::PokemonXY::new_from_supported_title(running_app, heap),
         SupportedTitle::PokemonOR => game::PokemonORAS::new_from_supported_title(running_app, heap),
@@ -150,6 +171,7 @@ pub fn install_hook(title: SupportedTitle) -> CtrResult<()> {
     let handle_copy = process.copy_handle_to_process(&pkrd_session_handle)?;
 
     match title {
+        SupportedTitle::PokemonCrystal => game::PokemonC::install_hook(&debug, handle_copy),
         SupportedTitle::PokemonX => game::PokemonXY::install_hook(&debug, handle_copy),
         SupportedTitle::PokemonY => game::PokemonXY::install_hook(&debug, handle_copy),
         SupportedTitle::PokemonOR => game::PokemonORAS::install_hook(&debug, handle_copy),
@@ -182,7 +204,11 @@ mod test {
     }
 
     impl HookedProcess for MockGame {
-        fn run_hook(&mut self, _screen: &mut display::DirectWriteScreen) -> CtrResult<()> {
+        fn run_hook(
+            &mut self,
+            _screen: &mut display::DirectWriteScreen,
+            _is_connected: bool,
+        ) -> CtrResult<()> {
             Ok(())
         }
 

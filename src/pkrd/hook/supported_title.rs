@@ -8,6 +8,7 @@ use num_enum::IntoPrimitive;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, IntoPrimitive)]
 #[repr(u64)]
 pub enum SupportedTitle {
+    PokemonCrystal = 0x0004000000172800,
     PokemonX = 0x0004000000055D00,
     PokemonY = 0x0004000000055E00,
     PokemonOR = 0x000400000011C400,
@@ -36,6 +37,7 @@ impl TryFrom<u64> for SupportedTitle {
 
     fn try_from(title_id: u64) -> Result<Self, Self::Error> {
         match title_id {
+            0x0004000000172800 => Ok(Self::PokemonCrystal),
             0x0004000000055D00 => Ok(Self::PokemonX),
             0x0004000000055E00 => Ok(Self::PokemonY),
             0x000400000011C400 => Ok(Self::PokemonOR),

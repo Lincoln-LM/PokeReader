@@ -17,6 +17,8 @@ pub mod notification;
 /// Sysmodule request handler.
 pub mod request_handler;
 
+/// Handler for commands sent over sockets
+mod command_handler;
 /// Everything related to drawing on the screen.
 mod display;
 /// Handles game pausing and frame advancing like an emulator to easily get frame accurate button presses.
