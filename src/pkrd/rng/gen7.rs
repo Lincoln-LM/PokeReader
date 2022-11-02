@@ -7,11 +7,16 @@ pub struct Gen7Rng {
     sfmt_rng: Sfmt,
     sfmt_advances: u32,
     sfmt_current_state: u64,
+    vframe: u32,
 }
 
 impl Gen7Rng {
     pub fn get_sfmt_advances(&self) -> u32 {
         self.sfmt_advances
+    }
+
+    pub fn get_vframe(&self) -> u32 {
+        self.vframe
     }
 
     fn update_sfmt(&mut self, sfmt_current_state: u64) {
@@ -43,11 +48,13 @@ impl Gen7Rng {
     pub fn update(&mut self, game: &impl reader::Gen7Reader) {
         let sfmt_state = game.get_sfmt_state();
         let init_seed = game.get_initial_seed();
+        self.vframe += 1;
 
         if self.init_seed != init_seed && init_seed != 0 {
             self.init_seed = init_seed;
             self.sfmt_rng = Sfmt::new(init_seed);
             self.sfmt_advances = 0;
+            self.vframe = 0;
             self.sfmt_current_state = self.sfmt_rng.get_current_state();
         }
 

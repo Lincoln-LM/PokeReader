@@ -53,6 +53,7 @@ pub fn draw_main(
     let init_seed = game.get_initial_seed();
     let sfmt_state = game.get_sfmt_state();
     let sfmt_advances = rng.get_sfmt_advances();
+    let vframe = rng.get_vframe();
     let tid = game.get_tid();
     let tsv = game.get_tsv();
 
@@ -64,7 +65,7 @@ pub fn draw_main(
             &alloc::format!("Curr state[1]: {:08X}", (sfmt_state & 0xffffffff) as u32),
             &alloc::format!("Curr state[0]: {:08X}", (sfmt_state >> 32) as u32),
             &alloc::format!("Advances: {}", sfmt_advances),
-            &alloc::format!(""),
+            &alloc::format!("VFrame: {}", vframe),
             &alloc::format!("Gen7TID: {}", tid),
             &alloc::format!("TSV: {}", tsv),
         ],
